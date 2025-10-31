@@ -17,14 +17,53 @@
 
 ## 설치 방법
 
-```bash
-# 의존성 설치
+### Windows 사용자
+
+**간단한 방법 (추천):**
+1. 프로젝트 폴더로 이동
+2. `setup.bat` 더블클릭 (또는 명령 프롬프트에서 실행)
+3. `run.bat` 더블클릭으로 앱 시작
+
+**명령 프롬프트 사용:**
+```cmd
+# 1. 프로젝트 폴더로 이동 (예시)
+cd C:\Users\YourName\SNS_opinion
+
+# 2. 설치
+setup.bat
+
+# 3. 실행
+run.bat
+```
+
+**수동 설치:**
+```cmd
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
-
-# TextBlob 데이터 다운로드
 python -c "import textblob; textblob.download_corpora()"
+python app.py
+```
 
-# 애플리케이션 실행
+📖 **자세한 가이드**: [WINDOWS_GUIDE.md](WINDOWS_GUIDE.md) 참고
+
+### Linux/Mac 사용자
+
+**스크립트 사용:**
+```bash
+# 설치
+bash setup.sh
+
+# 실행
+bash run.sh
+```
+
+**수동 설치:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python -c "import textblob; textblob.download_corpora()"
 python app.py
 ```
 
