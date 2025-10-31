@@ -317,3 +317,148 @@ header p {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Naver API Search Section */
+.naver-search-section {
+    background: #e8f5e9;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border-left: 5px solid #4caf50;
+}
+
+.naver-search-section h2 {
+    color: #2e7d32;
+    margin-bottom: 20px;
+}
+
+.api-status {
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+.api-status.enabled {
+    background: #c8e6c9;
+    color: #1b5e20;
+    border: 1px solid #81c784;
+}
+
+.api-status.disabled {
+    background: #ffcdd2;
+    color: #c62828;
+    border: 1px solid #e57373;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.search-form input[type="text"] {
+    flex: 2;
+    min-width: 250px;
+}
+
+.search-form select,
+.search-form input[type="number"] {
+    min-width: 120px;
+}
+
+.search-results {
+    margin-top: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.search-result-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.search-result-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item .title {
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.search-result-item .description {
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.search-result-item .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #999;
+}
+
+.search-result-item .platform-badge {
+    background: #4caf50;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+.search-result-item .sentiment-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.search-result-item .sentiment-badge.positive {
+    background: #c8e6c9;
+    color: #1b5e20;
+}
+
+.search-result-item .sentiment-badge.negative {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.search-result-item .sentiment-badge.neutral {
+    background: #b3e5fc;
+    color: #01579b;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #667eea;
+    font-size: 1.1em;
+}
+
+.error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ef5350;
+    margin-bottom: 15px;
+}
+
+.success-message {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #66bb6a;
+    margin-bottom: 15px;
+}

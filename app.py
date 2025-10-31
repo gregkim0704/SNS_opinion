@@ -7,6 +7,20 @@ from datetime import datetime, timedelta
 from collections import Counter
 import re
 import json
+import os
+from dotenv import load_dotenv
+
+# 환경 변수 로드
+load_dotenv()
+
+# 네이버 API 클라이언트 초기화 (선택적)
+try:
+    from naver_api import NaverAPIClient
+    naver_client = NaverAPIClient()
+    NAVER_API_ENABLED = bool(os.getenv('NAVER_CLIENT_ID') and os.getenv('NAVER_CLIENT_SECRET'))
+except ImportError:
+    naver_client = None
+    NAVER_API_ENABLED = False
 
 app = Flask(__name__)
 CORS(app)
@@ -178,6 +192,126 @@ def clear_data():
     reviews_data = []
 
     return jsonify({'message': 'All data cleared'})
+
+@app.route('/api/naver-search', methods=['POST'])
+def naver_search():
+    """네이버 API를 사용하여 실시간 데이터를 수집합니다."""
+    if not NAVER_API_ENABLED or not naver_client:
+        return jsonify({
+            'error': '네이버 API가 설정되지 않았습니다.',
+            'message': '.env 파일에 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET을 설정해주세요.'
+        }), 400
+
+    data = request.json
+    query = data.get('query', '')
+    category = data.get('category', 'all')  # all, blog, news, cafe, shopping
+    display = data.get('display', 10)
+
+    if not query:
+        return jsonify({'error': '검색어를 입력해주세요.'}), 400
+
+    try:
+        # 카테고리별 검색
+        if category == 'blog':
+            results = naver_client.search_blogs(query, display=display)
+        elif category == 'news':
+            results = naver_client.search_news(query, display=display)
+        elif category == 'cafe':
+            results = naver_client.search_cafearticle(query, display=display)
+        elif category == 'shopping':
+            results = naver_client.search_shopping(query, display=display)
+        else:  # all
+            all_results = naver_client.search_all(query, display=max(5, display // 4))
+            results = []
+            for category_results in all_results.values():
+                results.extend(category_results)
+
+        # 각 결과에 감정 분석 추가
+        for item in results:
+            sentiment_data = analyze_sentiment(item['text'])
+            item.update(sentiment_data)
+
+        return jsonify({
+            'results': results,
+            'count': len(results),
+            'query': query
+        })
+
+    except Exception as e:
+        return jsonify({
+            'error': '검색 중 오류가 발생했습니다.',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/naver-collect', methods=['POST'])
+def naver_collect_and_save():
+    """네이버 API로 데이터를 수집하고 분석 데이터에 추가합니다."""
+    if not NAVER_API_ENABLED or not naver_client:
+        return jsonify({
+            'error': '네이버 API가 설정되지 않았습니다.',
+            'message': '.env 파일에 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET을 설정해주세요.'
+        }), 400
+
+    global reviews_data
+    data = request.json
+    query = data.get('query', '')
+    category = data.get('category', 'all')
+    display = data.get('display', 10)
+
+    if not query:
+        return jsonify({'error': '검색어를 입력해주세요.'}), 400
+
+    try:
+        # 카테고리별 검색
+        if category == 'blog':
+            results = naver_client.search_blogs(query, display=display)
+        elif category == 'news':
+            results = naver_client.search_news(query, display=display)
+        elif category == 'cafe':
+            results = naver_client.search_cafearticle(query, display=display)
+        elif category == 'shopping':
+            results = naver_client.search_shopping(query, display=display)
+        else:  # all
+            all_results = naver_client.search_all(query, display=max(5, display // 4))
+            results = []
+            for category_results in all_results.values():
+                results.extend(category_results)
+
+        # 각 결과에 감정 분석 추가 및 저장
+        collected_count = 0
+        for item in results:
+            sentiment_data = analyze_sentiment(item['text'])
+            review_entry = {
+                'text': item['text'],
+                'platform': item['platform'],
+                'date': item['date'],
+                **sentiment_data
+            }
+            reviews_data.append(review_entry)
+            collected_count += 1
+
+        return jsonify({
+            'message': f'{collected_count}개의 데이터가 수집되어 분석에 추가되었습니다.',
+            'count': collected_count,
+            'query': query,
+            'total_reviews': len(reviews_data)
+        })
+
+    except Exception as e:
+        return jsonify({
+            'error': '데이터 수집 중 오류가 발생했습니다.',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/naver-status', methods=['GET'])
+def naver_api_status():
+    """네이버 API 연동 상태를 확인합니다."""
+    return jsonify({
+        'enabled': NAVER_API_ENABLED,
+        'configured': bool(os.getenv('NAVER_CLIENT_ID') and os.getenv('NAVER_CLIENT_SECRET')),
+        'client_id_set': bool(os.getenv('NAVER_CLIENT_ID')),
+        'client_secret_set': bool(os.getenv('NAVER_CLIENT_SECRET'))
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

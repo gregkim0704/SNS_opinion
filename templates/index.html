@@ -36,6 +36,25 @@
             <div id="analysisResult" class="result-box"></div>
         </section>
 
+        <section class="naver-search-section">
+            <h2>🔍 네이버 실시간 데이터 수집</h2>
+            <div id="naverApiStatus" class="api-status"></div>
+            <div class="search-form">
+                <input type="text" id="naverSearchQuery" class="form-control" placeholder="검색어를 입력하세요 (예: 아이폰 15, 강남 맛집)" />
+                <select id="naverCategory" class="form-control">
+                    <option value="all">전체</option>
+                    <option value="blog">블로그</option>
+                    <option value="news">뉴스</option>
+                    <option value="cafe">카페</option>
+                    <option value="shopping">쇼핑</option>
+                </select>
+                <input type="number" id="naverDisplay" class="form-control" value="10" min="1" max="100" placeholder="개수" />
+                <button onclick="searchNaver()" class="btn btn-primary">검색</button>
+                <button onclick="collectNaverData()" class="btn btn-success">수집 & 분석</button>
+            </div>
+            <div id="naverSearchResults" class="search-results"></div>
+        </section>
+
         <section class="statistics-section">
             <h2>📈 전체 통계</h2>
             <div class="stats-grid" id="statsGrid">
@@ -63,6 +82,7 @@
                 <h2>감정 분포</h2>
                 <canvas id="sentimentChart"></canvas>
             </div>
+    <script src="{{ url_for('static', filename='js/naver.js') }}"></script>
             <div class="chart-container">
                 <h2>플랫폼별 분포</h2>
                 <canvas id="platformChart"></canvas>
