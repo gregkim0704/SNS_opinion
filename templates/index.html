@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS 의견 동향 분석</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 SNS 의견 동향 분석 대시보드</h1>
+            <p>소셜 미디어 리뷰와 의견을 실시간으로 분석합니다</p>
+        </header>
+
+        <div class="controls">
+            <button onclick="loadSampleData()" class="btn btn-primary">샘플 데이터 로드</button>
+            <button onclick="clearData()" class="btn btn-secondary">데이터 초기화</button>
+            <button onclick="refreshDashboard()" class="btn btn-success">대시보드 새로고침</button>
+        </div>
+
+        <section class="input-section">
+            <h2>새 리뷰 추가</h2>
+            <div class="input-form">
+                <select id="platform" class="form-control">
+                    <option value="Twitter">Twitter</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="TikTok">TikTok</option>
+                </select>
+                <textarea id="reviewText" class="form-control" placeholder="리뷰나 의견을 입력하세요..." rows="4"></textarea>
+                <button onclick="analyzeReview()" class="btn btn-primary">분석하기</button>
+            </div>
+            <div id="analysisResult" class="result-box"></div>
+        </section>
+
+        <section class="statistics-section">
+            <h2>📈 전체 통계</h2>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-label">총 리뷰 수</div>
+                    <div class="stat-value" id="totalReviews">0</div>
+                </div>
+                <div class="stat-card positive">
+                    <div class="stat-label">긍정 의견</div>
+                    <div class="stat-value" id="positiveCount">0</div>
+                </div>
+                <div class="stat-card neutral">
+                    <div class="stat-label">중립 의견</div>
+                    <div class="stat-value" id="neutralCount">0</div>
+                </div>
+                <div class="stat-card negative">
+                    <div class="stat-label">부정 의견</div>
+                    <div class="stat-value" id="negativeCount">0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-section">
+            <div class="chart-container">
+                <h2>감정 분포</h2>
+                <canvas id="sentimentChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>플랫폼별 분포</h2>
+                <canvas id="platformChart"></canvas>
+            </div>
+        </section>
+
+        <section class="trends-section">
+            <h2>📉 시간별 트렌드</h2>
+            <div class="chart-container-large">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </section>
+
+        <section class="keywords-section">
+            <h2>🔑 주요 키워드</h2>
+            <div id="keywordsContainer" class="keywords-container"></div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
