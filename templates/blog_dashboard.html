@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 블로그 자동화 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1e1e2e;
+            --card-bg: #2d2d3f;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5558e8, #7c4fd4);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-light {
+            border-radius: 10px;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            color: var(--text-primary);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+
+        .preview-content {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .preview-content h2 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+        }
+
+        .preview-content h3 {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        .tab-content {
+            padding-top: 20px;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: none;
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .queue-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .queue-item-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .queue-item-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .scheduler-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .pulse-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-dot.inactive {
+            background: var(--danger-color);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-robot me-2"></i>AI 블로그 자동화
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <div id="scheduler-indicator" class="scheduler-status">
+                    <div class="pulse-dot inactive" id="pulse-dot"></div>
+                    <span id="scheduler-status-text">스케줄러 중지됨</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Status Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="stat-queue">0</div>
+                    <div class="stat-label">대기 중인 글</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="stat-today">0</div>
+                    <div class="stat-label">오늘 발행</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="stat-total-blog">0</div>
+                    <div class="stat-label">총 블로그 글</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-number" id="stat-total-threads">0</div>
+                    <div class="stat-label">총 쓰레드</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-plug me-2"></i>API 연결 상태</span>
+                        <button class="btn btn-sm btn-outline-light" onclick="checkStatus()">
+                            <i class="bi bi-arrow-clockwise"></i> 새로고침
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <span class="status-badge" id="status-openai">
+                                    <i class="bi bi-circle-fill"></i> OpenAI
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="status-badge" id="status-blogger">
+                                    <i class="bi bi-circle-fill"></i> Blogger
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="status-badge" id="status-threads">
+                                    <i class="bi bi-circle-fill"></i> Threads
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="status-badge" id="status-youtube">
+                                    <i class="bi bi-circle-fill"></i> YouTube
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="card">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="generate-tab" data-bs-toggle="tab" data-bs-target="#generate" type="button">
+                            <i class="bi bi-magic me-2"></i>글 생성
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="youtube-tab" data-bs-toggle="tab" data-bs-target="#youtube" type="button">
+                            <i class="bi bi-youtube me-2"></i>유튜브 재가공
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="queue-tab" data-bs-toggle="tab" data-bs-target="#queue" type="button">
+                            <i class="bi bi-list-task me-2"></i>발행 큐
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scheduler-tab" data-bs-toggle="tab" data-bs-target="#scheduler" type="button">
+                            <i class="bi bi-clock-history me-2"></i>자동화 설정
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="mainTabsContent">
+                    <!-- 글 생성 탭 -->
+                    <div class="tab-pane fade show active" id="generate" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <h5 class="mb-4">AI 블로그 글 생성</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">키워드 *</label>
+                                    <input type="text" class="form-control" id="keyword" placeholder="예: 부업으로 월 100만원 버는 방법">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">글 스타일</label>
+                                    <select class="form-select" id="style">
+                                        <option value="informative">정보 전달형</option>
+                                        <option value="listicle">리스트형 (N가지 방법)</option>
+                                        <option value="tutorial">튜토리얼/가이드</option>
+                                        <option value="storytelling">스토리텔링</option>
+                                        <option value="review">리뷰/평가</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">어조</label>
+                                    <select class="form-select" id="tone">
+                                        <option value="friendly">친근한</option>
+                                        <option value="professional">전문적인</option>
+                                        <option value="casual">편안한</option>
+                                        <option value="humorous">유머러스한</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">글 길이</label>
+                                    <select class="form-select" id="length">
+                                        <option value="short">짧게 (~500자)</option>
+                                        <option value="medium" selected>보통 (~1000자)</option>
+                                        <option value="long">길게 (~2000자)</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" id="generateBtn" onclick="generatePost()">
+                                    <span class="loading-spinner me-2" id="generateSpinner"></span>
+                                    <i class="bi bi-stars me-2"></i>글 생성하기
+                                </button>
+                            </div>
+                            <div class="col-md-7">
+                                <h5 class="mb-4">미리보기</h5>
+                                <div class="preview-content" id="preview">
+                                    <p class="text-muted text-center py-5">
+                                        <i class="bi bi-file-text" style="font-size: 3rem;"></i><br>
+                                        키워드를 입력하고 생성하면 여기에 미리보기가 표시됩니다.
+                                    </p>
+                                </div>
+                                <div class="mt-3 d-flex gap-2" id="preview-actions" style="display: none !important;">
+                                    <button class="btn btn-primary flex-grow-1" onclick="addToQueue()">
+                                        <i class="bi bi-plus-circle me-2"></i>큐에 추가
+                                    </button>
+                                    <button class="btn btn-outline-light" onclick="publishNow()">
+                                        <i class="bi bi-send me-2"></i>즉시 발행
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 유튜브 재가공 탭 -->
+                    <div class="tab-pane fade" id="youtube" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <h5 class="mb-4">유튜브 대본 재가공</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">유튜브 URL</label>
+                                    <input type="text" class="form-control" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                                </div>
+                                <button class="btn btn-outline-light w-100 mb-4" onclick="extractYoutube()">
+                                    <i class="bi bi-download me-2"></i>대본 추출하기
+                                </button>
+                                <div class="mb-3">
+                                    <label class="form-label">추출된 대본</label>
+                                    <textarea class="form-control" id="youtubeScript" rows="10" placeholder="대본이 여기에 표시됩니다..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">타겟 키워드 (선택)</label>
+                                    <input type="text" class="form-control" id="youtubeKeyword" placeholder="특정 키워드로 최적화">
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="rewriteYoutube()">
+                                    <i class="bi bi-arrow-repeat me-2"></i>블로그 글로 재가공
+                                </button>
+                            </div>
+                            <div class="col-md-7">
+                                <h5 class="mb-4">재가공 결과</h5>
+                                <div class="preview-content" id="youtube-preview">
+                                    <p class="text-muted text-center py-5">
+                                        <i class="bi bi-youtube" style="font-size: 3rem;"></i><br>
+                                        유튜브 URL을 입력하고 대본을 추출하세요.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 발행 큐 탭 -->
+                    <div class="tab-pane fade" id="queue" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">발행 대기 중인 글</h5>
+                            <button class="btn btn-primary" onclick="publishFromQueue()">
+                                <i class="bi bi-send me-2"></i>다음 글 발행
+                            </button>
+                        </div>
+                        <div id="queue-list">
+                            <p class="text-muted text-center py-5">대기 중인 글이 없습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 자동화 설정 탭 -->
+                    <div class="tab-pane fade" id="scheduler" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-4">자동 발행 설정</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">발행 간격 (시간)</label>
+                                    <input type="number" class="form-control" id="publishInterval" value="3" min="1" max="24">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">일일 최대 발행 수</label>
+                                    <input type="number" class="form-control" id="maxDailyPosts" value="8" min="1" max="24">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">활동 시간</label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="workingStart" value="9" min="0" max="23" placeholder="시작">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="workingEnd" value="22" min="0" max="23" placeholder="종료">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">자동 생성 키워드 (쉼표로 구분)</label>
+                                    <textarea class="form-control" id="keywords" rows="3" placeholder="부업, 재테크, 투자, 자기계발"></textarea>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoGenerate" checked>
+                                    <label class="form-check-label" for="autoGenerate">큐 부족 시 자동 생성</label>
+                                </div>
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="postToThreads" checked>
+                                    <label class="form-check-label" for="postToThreads">쓰레드에도 자동 발행</label>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary flex-grow-1" id="startSchedulerBtn" onclick="toggleScheduler()">
+                                        <i class="bi bi-play-fill me-2"></i>스케줄러 시작
+                                    </button>
+                                    <button class="btn btn-outline-light" onclick="saveSchedulerConfig()">
+                                        <i class="bi bi-save me-2"></i>설정 저장
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-4">발행 기록</h5>
+                                <div class="preview-content" id="publish-history">
+                                    <p class="text-muted text-center py-5">발행 기록이 여기에 표시됩니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 현재 생성된 글 저장
+        let currentPost = null;
+        let schedulerRunning = false;
+
+        // 페이지 로드 시 상태 확인
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            loadQueue();
+            loadSchedulerStatus();
+        });
+
+        // Toast 알림 표시
+        function showToast(message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-primary';
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('toastContainer').insertAdjacentHTML('beforeend', toastHtml);
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+        }
+
+        // API 상태 확인
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                updateStatusBadge('status-openai', data.openai);
+                updateStatusBadge('status-blogger', data.blogger || data.blogger_authenticated);
+                updateStatusBadge('status-threads', data.threads);
+                updateStatusBadge('status-youtube', data.youtube);
+
+                // 통계 업데이트
+                if (data.scheduler) {
+                    document.getElementById('stat-queue').textContent = data.scheduler.queue_pending || 0;
+                    document.getElementById('stat-today').textContent = data.scheduler.posts_today || 0;
+                    document.getElementById('stat-total-blog').textContent = data.scheduler.total_blog_posts || 0;
+                    document.getElementById('stat-total-threads').textContent = data.scheduler.total_threads_posts || 0;
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        function updateStatusBadge(elementId, isActive) {
+            const element = document.getElementById(elementId);
+            if (isActive) {
+                element.className = 'status-badge status-active';
+            } else {
+                element.className = 'status-badge status-inactive';
+            }
+        }
+
+        // 블로그 글 생성
+        async function generatePost() {
+            const keyword = document.getElementById('keyword').value.trim();
+            if (!keyword) {
+                showToast('키워드를 입력해주세요.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('generateBtn');
+            const spinner = document.getElementById('generateSpinner');
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        style: document.getElementById('style').value,
+                        tone: document.getElementById('tone').value,
+                        length: document.getElementById('length').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPost = data.post;
+                    displayPreview(data.post);
+                    showToast('글이 생성되었습니다!', 'success');
+                } else {
+                    showToast(data.error || '글 생성에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // 미리보기 표시
+        function displayPreview(post) {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `
+                <h4 class="mb-3">${post.title}</h4>
+                <p class="text-muted mb-3">${post.meta_description}</p>
+                <div class="mb-3">
+                    ${post.tags.map(tag => `<span class="badge bg-secondary me-1">${tag}</span>`).join('')}
+                </div>
+                <hr>
+                <div>${post.content}</div>
+                <hr>
+                <div class="mt-3">
+                    <strong>쓰레드 훅:</strong><br>
+                    <p class="mt-2 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px;">${post.thread_hook}</p>
+                </div>
+            `;
+            document.getElementById('preview-actions').style.display = 'flex !important';
+            document.getElementById('preview-actions').classList.remove('d-none');
+        }
+
+        // 큐에 추가
+        async function addToQueue() {
+            if (!currentPost) {
+                showToast('먼저 글을 생성해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/queue/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post: currentPost })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('큐에 추가되었습니다!', 'success');
+                    loadQueue();
+                    checkStatus();
+                } else {
+                    showToast(data.error || '추가에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 큐 로드
+        async function loadQueue() {
+            try {
+                const response = await fetch('/api/queue');
+                const data = await response.json();
+
+                const queueList = document.getElementById('queue-list');
+
+                if (data.queue && data.queue.length > 0) {
+                    const pendingItems = data.queue.filter(item => item.status === 'pending');
+
+                    if (pendingItems.length > 0) {
+                        queueList.innerHTML = pendingItems.map(item => `
+                            <div class="queue-item">
+                                <div>
+                                    <div class="queue-item-title">${item.data.title}</div>
+                                    <div class="queue-item-meta">
+                                        ${item.data.keyword || ''} | ${new Date(item.created_at).toLocaleString('ko-KR')}
+                                    </div>
+                                </div>
+                                <span class="status-badge status-warning">대기중</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        queueList.innerHTML = '<p class="text-muted text-center py-5">대기 중인 글이 없습니다.</p>';
+                    }
+                } else {
+                    queueList.innerHTML = '<p class="text-muted text-center py-5">대기 중인 글이 없습니다.</p>';
+                }
+            } catch (error) {
+                console.error('Queue load failed:', error);
+            }
+        }
+
+        // 유튜브 대본 추출
+        async function extractYoutube() {
+            const url = document.getElementById('youtubeUrl').value.trim();
+            if (!url) {
+                showToast('유튜브 URL을 입력해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/youtube/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('youtubeScript').value = data.data.transcript;
+                    showToast('대본을 추출했습니다!', 'success');
+                } else {
+                    showToast(data.error || '추출에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 유튜브 대본 재가공
+        async function rewriteYoutube() {
+            const script = document.getElementById('youtubeScript').value.trim();
+            if (!script) {
+                showToast('대본을 입력해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/youtube/rewrite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        script: script,
+                        keyword: document.getElementById('youtubeKeyword').value.trim() || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPost = data.post;
+                    document.getElementById('youtube-preview').innerHTML = `
+                        <h4 class="mb-3">${data.post.title}</h4>
+                        <p class="text-muted">${data.post.meta_description}</p>
+                        <hr>
+                        <div>${data.post.content}</div>
+                    `;
+                    showToast('재가공이 완료되었습니다!', 'success');
+                } else {
+                    showToast(data.error || '재가공에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 스케줄러 상태 로드
+        async function loadSchedulerStatus() {
+            try {
+                const response = await fetch('/api/scheduler/status');
+                const data = await response.json();
+
+                schedulerRunning = data.scheduler_running;
+                updateSchedulerUI();
+
+                // 설정값 로드
+                const configResponse = await fetch('/api/scheduler/config');
+                const config = await configResponse.json();
+
+                document.getElementById('publishInterval').value = config.blog_interval_hours || 3;
+                document.getElementById('maxDailyPosts').value = config.max_daily_posts || 8;
+                document.getElementById('workingStart').value = config.working_hours?.start || 9;
+                document.getElementById('workingEnd').value = config.working_hours?.end || 22;
+                document.getElementById('keywords').value = (config.keywords || []).join(', ');
+                document.getElementById('autoGenerate').checked = config.auto_generate !== false;
+                document.getElementById('postToThreads').checked = config.post_to_threads !== false;
+
+                // 발행 기록
+                const historyHtml = [];
+                if (data.last_blog_post) {
+                    historyHtml.push(`
+                        <div class="queue-item">
+                            <div>
+                                <div class="queue-item-title">${data.last_blog_post.title}</div>
+                                <div class="queue-item-meta">
+                                    <a href="${data.last_blog_post.url}" target="_blank">${data.last_blog_post.url}</a><br>
+                                    ${new Date(data.last_blog_post.time).toLocaleString('ko-KR')}
+                                </div>
+                            </div>
+                            <span class="status-badge status-active">블로그</span>
+                        </div>
+                    `);
+                }
+                if (historyHtml.length > 0) {
+                    document.getElementById('publish-history').innerHTML = historyHtml.join('');
+                }
+            } catch (error) {
+                console.error('Scheduler status load failed:', error);
+            }
+        }
+
+        function updateSchedulerUI() {
+            const pulseDot = document.getElementById('pulse-dot');
+            const statusText = document.getElementById('scheduler-status-text');
+            const btn = document.getElementById('startSchedulerBtn');
+
+            if (schedulerRunning) {
+                pulseDot.classList.remove('inactive');
+                statusText.textContent = '스케줄러 실행 중';
+                btn.innerHTML = '<i class="bi bi-stop-fill me-2"></i>스케줄러 중지';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+            } else {
+                pulseDot.classList.add('inactive');
+                statusText.textContent = '스케줄러 중지됨';
+                btn.innerHTML = '<i class="bi bi-play-fill me-2"></i>스케줄러 시작';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-primary');
+            }
+        }
+
+        // 스케줄러 토글
+        async function toggleScheduler() {
+            const endpoint = schedulerRunning ? '/api/scheduler/stop' : '/api/scheduler/start';
+
+            try {
+                const response = await fetch(endpoint, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    schedulerRunning = !schedulerRunning;
+                    updateSchedulerUI();
+                    showToast(schedulerRunning ? '스케줄러가 시작되었습니다!' : '스케줄러가 중지되었습니다.', 'success');
+                } else {
+                    showToast(data.error || '작업에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 스케줄러 설정 저장
+        async function saveSchedulerConfig() {
+            const config = {
+                blog_interval_hours: parseInt(document.getElementById('publishInterval').value),
+                max_daily_posts: parseInt(document.getElementById('maxDailyPosts').value),
+                working_hours: {
+                    start: parseInt(document.getElementById('workingStart').value),
+                    end: parseInt(document.getElementById('workingEnd').value)
+                },
+                keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()).filter(k => k),
+                auto_generate: document.getElementById('autoGenerate').checked,
+                post_to_threads: document.getElementById('postToThreads').checked
+            };
+
+            try {
+                const response = await fetch('/api/scheduler/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('설정이 저장되었습니다!', 'success');
+                } else {
+                    showToast(data.error || '저장에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 큐에서 발행
+        async function publishFromQueue() {
+            try {
+                const response = await fetch('/api/scheduler/publish-now', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`발행 완료: ${data.result.url}`, 'success');
+                    loadQueue();
+                    checkStatus();
+                } else {
+                    showToast(data.message || '발행할 글이 없습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 즉시 발행
+        async function publishNow() {
+            if (!currentPost) {
+                showToast('먼저 글을 생성해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/blogger/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: currentPost.title,
+                        content: currentPost.content,
+                        labels: currentPost.tags
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`발행 완료: ${data.post.url}`, 'success');
+                    checkStatus();
+                } else {
+                    showToast(data.error || '발행에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 주기적 상태 업데이트
+        setInterval(() => {
+            checkStatus();
+            loadSchedulerStatus();
+        }, 30000);
+    </script>
+</body>
+</html>
